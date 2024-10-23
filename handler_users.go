@@ -42,7 +42,7 @@ func (apiCfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusInternalServerError, "error hashing password")
 		return
 	}
-
+	//Automatically adds Elevation: "user" in sqlc function
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		UserID:    uuid.New(),
 		Name:      parameters.Name,
