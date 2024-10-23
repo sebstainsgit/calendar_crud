@@ -9,7 +9,7 @@ import (
 )
 
 type apiConfig struct {
-	DB        *database.Queries
+	DB         *database.Queries
 	JWT_SECRET string
 }
 
@@ -18,7 +18,12 @@ type errResponse struct {
 }
 
 type JWTResponse struct {
-	JWT string `json:"token"`
+	JWT string `json:"access_token"`
+}
+
+type TokenResponse struct {
+	JWT          string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
 }
 
 type authedHandler func(w http.ResponseWriter, r *http.Request, user database.User)
@@ -40,6 +45,13 @@ type User struct {
 	Password  string    `json"password"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
+	Elevation string    `json:"elevation"`
+}
+
+type RefreshToken struct {
+	RefrToken string    `json:"refresh_token`
+	UsersID   uuid.UUID `json:"users_id"`
+	Expires   time.Time `json:"expires"`
 }
 
 func DBEventToLocalEvent(event database.Event) Event {
@@ -61,6 +73,15 @@ func DBUserToLocalUser(user database.User) User {
 		Password:  user.Password,
 		CreatedAt: user.CreatedAt,
 		UpdatedAt: user.UpdatedAt,
+		Elevation: user.Elevation,
+	}
+}
+
+func DBRefrTokenToLocalRefrToken(DBRefr_Token database.RefreshToken) RefreshToken {
+	return RefreshToken{
+		RefrToken: DBRefr_Token.RefrToken,
+		UsersID:   DBRefr_Token.UsersID,
+		Expires:   DBRefr_Token.Expires,
 	}
 }
 

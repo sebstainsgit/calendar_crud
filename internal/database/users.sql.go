@@ -15,7 +15,7 @@ import (
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (user_id, name, email, password, created_at, updated_at)
 VALUES ($1, $2, $3, $4, $5, $6)
-RETURNING user_id, name, email, password, created_at, updated_at
+RETURNING user_id, name, email, password, created_at, updated_at, elevation
 `
 
 type CreateUserParams struct {
@@ -44,6 +44,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Elevation,
 	)
 	return i, err
 }
@@ -59,7 +60,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, name, email, password, created_at, updated_at FROM users
+SELECT user_id, name, email, password, created_at, updated_at, elevation FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -78,6 +79,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 			&i.Password,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Elevation,
 		); err != nil {
 			return nil, err
 		}
@@ -93,7 +95,7 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 }
 
 const getUserFromEmail = `-- name: GetUserFromEmail :one
-SELECT user_id, name, email, password, created_at, updated_at FROM users
+SELECT user_id, name, email, password, created_at, updated_at, elevation FROM users
 WHERE email = $1
 `
 
@@ -107,12 +109,13 @@ func (q *Queries) GetUserFromEmail(ctx context.Context, email string) (User, err
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Elevation,
 	)
 	return i, err
 }
 
 const getUserFromID = `-- name: GetUserFromID :one
-SELECT user_id, name, email, password, created_at, updated_at FROM users
+SELECT user_id, name, email, password, created_at, updated_at, elevation FROM users
 WHERE user_id = $1
 `
 
@@ -126,6 +129,43 @@ func (q *Queries) GetUserFromID(ctx context.Context, userID uuid.UUID) (User, er
 		&i.Password,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Elevation,
+	)
+	return i, err
+}
+
+const updateUserInfo = `-- name: UpdateUserInfo :one
+UPDATE users
+SET name = $2, email = $3, password = $4, updated_at = $5
+WHERE user_id = $1
+RETURNING user_id, name, email, password, created_at, updated_at, elevation
+`
+
+type UpdateUserInfoParams struct {
+	UserID    uuid.UUID
+	Name      string
+	Email     string
+	Password  string
+	UpdatedAt time.Time
+}
+
+func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserInfo,
+		arg.UserID,
+		arg.Name,
+		arg.Email,
+		arg.Password,
+		arg.UpdatedAt,
+	)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Elevation,
 	)
 	return i, err
 }

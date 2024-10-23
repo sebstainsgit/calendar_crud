@@ -7,7 +7,7 @@ import (
 
 func (apiCfg *apiConfig) middlewareUserAuth(handler authedHandler) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		JWT, err := getJWTHeader(r.Header)
+		JWT, err := getBearerHeader(r.Header)
 
 		if err != nil {
 			respondWithError(w, http.StatusForbidden, fmt.Sprintf("Missing or malformed header: %s", err))
@@ -18,7 +18,9 @@ func (apiCfg *apiConfig) middlewareUserAuth(handler authedHandler) http.HandlerF
 
 		if err != nil {
 			respondWithError(w, http.StatusBadRequest, fmt.Sprintf("Error verifying JWT: %s", err))
+			return
 		}
+
 		handler(w, r, user)
 	}
 }

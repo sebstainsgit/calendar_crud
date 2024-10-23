@@ -15,6 +15,6 @@ RETURNING *;
 SELECT * FROM events
 WHERE event_id = $1;
 
--- name: DeleteEventByID :exec
+-- name: DeleteEvent :exec
 DELETE FROM events
 WHERE event_id = $1;

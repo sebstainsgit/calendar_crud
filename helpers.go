@@ -16,13 +16,14 @@ func makeVarChar() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func getJWTHeader(headers http.Header) (string, error) {
+func getBearerHeader(headers http.Header) (string, error) {
 	val := headers.Get("Authorisation")
+
 	if val == "" {
 		return "", errors.New("no authentication info found")
 	}
 
-	//Expects [ApiKey, {apikey}]
+	//Expects [Bearer, {JWT}]
 	vals := strings.Split(val, " ")
 
 	if len(vals) != 2 {

@@ -19,7 +19,7 @@ type Event struct {
 	UpdatedAt time.Time
 }
 
-type Login struct {
+type RefreshToken struct {
 	RefrToken string
 	UsersID   uuid.UUID
 	Expires   time.Time
@@ -32,4 +32,5 @@ type User struct {
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Elevation string
 }

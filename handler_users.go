@@ -95,31 +95,30 @@ func (apiCfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		respondWithError(w, http.StatusUnauthorized, "invalid password, please try again")
 		return
 	}
-	//After this point we assume the user is authed (has correct email)
+	//After this point we assume the user is authed (has correct email and password)
 	//Expires in 3 hours
-	token, err := apiCfg.createJWT(user.UserID, 3)
+	token, err := apiCfg.createJWT(user.UserID)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating JWT: %s", err))
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, JWTResponse{JWT: token})
-}
-
-func (apiCfg *apiConfig) getAllUsers(w http.ResponseWriter, r *http.Request) {
-	userArr, err := apiCfg.DB.GetAllUsers(r.Context())
+	refrToken, err := apiCfg.createRefrToken(r.Context(), user.UserID)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error getting users from DB")
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating and saving refresh token: %s", err))
+		return
 	}
 
-	respondWithJSON(w, http.StatusOK, DBUsersToLocalUsers(userArr))
+	respondWithJSON(w, http.StatusOK, TokenResponse{JWT: token, RefreshToken: refrToken.RefrToken})
 }
 
-func (apiCfg *apiConfig) deleteUserSelf(w http.ResponseWriter, r *http.Request, user database.User) {
+func (apiCfg *apiConfig) updateUserInfo(w http.ResponseWriter, r *http.Request, user database.User) {
 	type params struct {
-		User_ID string `json:"user_id"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+		Name     string `json:"name"`
 	}
 
 	var parameters params
@@ -137,13 +136,37 @@ func (apiCfg *apiConfig) deleteUserSelf(w http.ResponseWriter, r *http.Request, 
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
 		return
 	}
-	//IF authenticated user is the user to be deleted, else ignore
-	if user.UserID.String() != parameters.User_ID {
-		respondWithError(w, http.StatusUnauthorized, "only user can delete their own account")
+
+	updatedUser, err := apiCfg.DB.UpdateUserInfo(r.Context(), database.UpdateUserInfoParams{
+		UserID:   user.UserID,
+		Name:     parameters.Name,
+		Email:    parameters.Email,
+		Password: parameters.Password,
+		UpdatedAt: time.Now().UTC(),
+	})
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error updating user info in DB: %s", err))
 		return
 	}
 
-	err = apiCfg.DB.DeleteUser(r.Context(), user.UserID)
+	respondWithJSON(w, http.StatusOK, DBUserToLocalUser(updatedUser))
+}
+
+func (apiCfg *apiConfig) getAllUsers(w http.ResponseWriter, r *http.Request) {
+	userArr, err := apiCfg.DB.GetAllUsers(r.Context())
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error getting users from DB: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, DBUsersToLocalUsers(userArr))
+}
+
+func (apiCfg *apiConfig) deleteUserSelf(w http.ResponseWriter, r *http.Request, user database.User) {
+	//Deletes logged in user
+	err := apiCfg.DB.DeleteUser(r.Context(), user.UserID)
 
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error deleting user from database")

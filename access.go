@@ -9,12 +9,13 @@ import (
 	"github.com/sebstainsgit/calendar/internal/database"
 )
 
-func (apiCfg *apiConfig) createJWT(UserID uuid.UUID, expiresIn time.Duration) (string, error) {
+func (apiCfg *apiConfig) createJWT(UserID uuid.UUID) (string, error) {
+	//Expires in 4 hours
 	claims := jwt.RegisteredClaims{
 		Issuer:    "calendar",
 		Subject:   UserID.String(),
 		IssuedAt:  jwt.NewNumericDate(time.Now().UTC()),
-		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(expiresIn) * time.Hour)),
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Duration(4) * time.Hour).UTC()),
 	}
 
 	JWToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -52,8 +53,28 @@ func (apiCfg *apiConfig) verifyJWT(strToken string, ctx context.Context) (databa
 	user, err := apiCfg.DB.GetUserFromID(ctx, userID)
 
 	if err != nil {
-		return database.User{}, nil
+		return database.User{}, err
 	}
 
 	return user, nil
+}
+
+func (apiCfg *apiConfig) createRefrToken(ctx context.Context, userID uuid.UUID) (database.RefreshToken, error) {
+	refrToken, err := makeVarChar()
+
+	if err != nil {
+		return database.RefreshToken{}, err
+	}
+	//Expires in 14 days
+	DBRefrToken, err := apiCfg.DB.CreateRefrToken(ctx, database.CreateRefrTokenParams{
+		RefrToken: refrToken,
+		UsersID:   userID,
+		Expires:   time.Now().Add(time.Duration(14) * 24 * time.Hour),
+	})
+
+	if err != nil {
+		return database.RefreshToken{}, err
+	}
+
+	return DBRefrToken, nil
 }

@@ -16,7 +16,6 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 		Event_Name string `json:"event_name"`
 		Date       string `json:"date"`
 	}
-
 	//Date in format "2018-04-08 15:04:05"
 
 	var parameters params
@@ -56,14 +55,14 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 		return
 	}
 
-	respondWithJSON(w, http.StatusOK, DBEventToLocalEvent(event))
+	respondWithJSON(w, http.StatusCreated, DBEventToLocalEvent(event))
 }
 
 func (apiCfg *apiConfig) getUsersEvents(w http.ResponseWriter, r *http.Request, user database.User) {
 	events, err := apiCfg.DB.GetUsersEvents(r.Context(), user.UserID)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error fetching all queries from DB: "+err.Error())
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error fetching all events from DB: %s", err))
 		return
 	}
 
@@ -94,26 +93,26 @@ func (apiCfg *apiConfig) deleteEvent(w http.ResponseWriter, r *http.Request, use
 	DBEventUUID, err := uuid.Parse(parameters.EventID)
 
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "error parsing uuid")
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error parsing uuid %s", err))
 		return
 	}
 
 	event, err := apiCfg.DB.GetEventByID(r.Context(), DBEventUUID)
 
 	if err != nil {
-		respondWithError(w, http.StatusBadRequest, "event not found")
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("event not found: %s", err))
 		return
 	}
 
 	if event.UsersID != user.UserID {
-		respondWithError(w, http.StatusUnauthorized, "cannot delete event if not the author")
+		respondWithError(w, http.StatusUnauthorized, fmt.Sprintf("cannot delete event if not the author: %s", err))
 		return
 	}
 
-	err = apiCfg.DB.DeleteEventByID(r.Context(), event.EventID)
+	err = apiCfg.DB.DeleteEvent(r.Context(), event.EventID)
 
 	if err != nil {
-		respondWithError(w, http.StatusUnauthorized, "error deleting event in database")
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error deleting event in database: %s", err))
 		return
 	}
 

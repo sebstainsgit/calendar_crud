@@ -51,8 +51,6 @@ func main() {
 		MaxAge:           3000,
 	}))
 
-	//ADD ADMIN TABLE AND ADMINS SHOULD BE ABLE TO GET ALL USERS + EVENTS AND STUFF
-	
 	//Responds with 200
 	router.Get("/ready", handlerReadiness)
 	//Responds with error
@@ -65,6 +63,8 @@ func main() {
 	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createEvent))
 
 	userRouter.Post("/login", apiCfg.loginUser)
+
+	userRouter.Get("/refresh", apiCfg.makeJWTfromRefrToken)
 		
 	userRouter.Delete("/delete_event", apiCfg.middlewareUserAuth(apiCfg.deleteEvent))
 
@@ -72,7 +72,9 @@ func main() {
 
 	userRouter.Get("/users", apiCfg.getAllUsers)
 
-	userRouter.Delete("/users", apiCfg.middlewareUserAuth(apiCfg.deleteUserSelf))
+	userRouter.Post("/update_self", apiCfg.middlewareUserAuth(apiCfg.updateUserInfo))
+
+	userRouter.Delete("/delete_self", apiCfg.middlewareUserAuth(apiCfg.deleteUserSelf))
 	
 	router.Mount("/user", userRouter)
 
