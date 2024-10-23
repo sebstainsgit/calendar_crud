@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-func makeAPIKey() (string, error) {
+func makeVarChar() (string, error) {
 	bytes := make([]byte, 16)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", err
@@ -16,7 +16,7 @@ func makeAPIKey() (string, error) {
 	return hex.EncodeToString(bytes), nil
 }
 
-func GetApiKey(headers http.Header) (string, error) {
+func getJWTHeader(headers http.Header) (string, error) {
 	val := headers.Get("Authorisation")
 	if val == "" {
 		return "", errors.New("no authentication info found")
@@ -29,7 +29,7 @@ func GetApiKey(headers http.Header) (string, error) {
 		return "", errors.New("malformed auth header")
 	}
 
-	if vals[0] != "ApiKey" {
+	if vals[0] != "Bearer" {
 		return "", errors.New("malformed first part of auth header")
 	}
 

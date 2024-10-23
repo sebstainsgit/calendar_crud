@@ -33,8 +33,11 @@ func main() {
 		log.Printf("Unable to connect to database: %s", err)
 	}
 
+	JWTString := os.Getenv("JWT_SECRET")
+
 	apiCfg := apiConfig{
 		DB: db,
+		JWT_SECRET: JWTString,
 	}
 
 	router := chi.NewRouter()
@@ -61,6 +64,8 @@ func main() {
 
 	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createEvent))
 
+	userRouter.Post("/login", apiCfg.loginUser)
+		
 	userRouter.Delete("/delete_event", apiCfg.middlewareUserAuth(apiCfg.deleteEvent))
 
 	userRouter.Post("/users", apiCfg.createUser)

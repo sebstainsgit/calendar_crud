@@ -19,9 +19,14 @@ type Event struct {
 	UpdatedAt time.Time
 }
 
+type Login struct {
+	RefrToken string
+	UsersID   uuid.UUID
+	Expires   time.Time
+}
+
 type User struct {
 	UserID    uuid.UUID
-	ApiKey    string
 	Name      string
 	Email     string
 	Password  string

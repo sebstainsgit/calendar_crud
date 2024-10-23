@@ -17,6 +17,8 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 		Date       string `json:"date"`
 	}
 
+	//Date in format "2018-04-08 15:04:05"
+
 	var parameters params
 
 	data, err := io.ReadAll(r.Body)
@@ -33,7 +35,7 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 		return
 	}
 
-	dueTime, err := time.Parse(time.RFC1123Z, parameters.Date)
+	dueTime, err := time.Parse(time.DateTime, parameters.Date)
 
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error parsing time into correct format: %s", err))
@@ -43,7 +45,7 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 	event, err := apiCfg.DB.CreateEvent(r.Context(), database.CreateEventParams{
 		EventID:   uuid.New(),
 		EventName: parameters.Event_Name,
-		UsersID: user.UserID,
+		UsersID:   user.UserID,
 		Date:      dueTime,
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
@@ -59,7 +61,7 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 
 func (apiCfg *apiConfig) getUsersEvents(w http.ResponseWriter, r *http.Request, user database.User) {
 	events, err := apiCfg.DB.GetUsersEvents(r.Context(), user.UserID)
-	
+
 	if err != nil {
 		respondWithError(w, http.StatusInternalServerError, "error fetching all queries from DB: "+err.Error())
 		return
@@ -95,7 +97,7 @@ func (apiCfg *apiConfig) deleteEvent(w http.ResponseWriter, r *http.Request, use
 		respondWithError(w, http.StatusBadRequest, "error parsing uuid")
 		return
 	}
-	
+
 	event, err := apiCfg.DB.GetEventByID(r.Context(), DBEventUUID)
 
 	if err != nil {

@@ -9,12 +9,16 @@ import (
 )
 
 type apiConfig struct {
-	DB           *database.Queries
-	Admin_Secret string
+	DB        *database.Queries
+	JWT_SECRET string
 }
 
 type errResponse struct {
 	Error string `json:"error"`
+}
+
+type JWTResponse struct {
+	JWT string `json:"token"`
 }
 
 type authedHandler func(w http.ResponseWriter, r *http.Request, user database.User)
@@ -31,7 +35,6 @@ type Event struct {
 
 type User struct {
 	UserID    uuid.UUID `json:"user_id"`
-	ApiKey    string    `json:"api_key"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
 	Password  string    `json"password"`
@@ -53,7 +56,6 @@ func DBEventToLocalEvent(event database.Event) Event {
 func DBUserToLocalUser(user database.User) User {
 	return User{
 		UserID:    user.UserID,
-		ApiKey:    user.ApiKey,
 		Name:      user.Name,
 		Email:     user.Email,
 		Password:  user.Password,

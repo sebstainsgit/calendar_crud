@@ -43,16 +43,8 @@ func (apiCfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	APIKey, err := makeAPIKey()
-
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating API key: %s", err))
-		return
-	}
-
 	user, err := apiCfg.DB.CreateUser(r.Context(), database.CreateUserParams{
 		UserID:    uuid.New(),
-		ApiKey:    APIKey,
 		Name:      parameters.Name,
 		Email:     parameters.Email,
 		Password:  string(hashed),
@@ -66,6 +58,53 @@ func (apiCfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	respondWithJSON(w, http.StatusCreated, DBUserToLocalUser(user))
+}
+
+func (apiCfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
+	type params struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var parameters params
+
+	data, err := io.ReadAll(r.Body)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
+		return
+	}
+
+	err = json.Unmarshal(data, &parameters)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
+		return
+	}
+
+	user, err := apiCfg.DB.GetUserFromEmail(r.Context(), parameters.Email)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error getting user from DB: %s", err))
+		return
+	}
+
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(parameters.Password))
+
+	if err != nil {
+		respondWithError(w, http.StatusUnauthorized, "invalid password, please try again")
+		return
+	}
+	//After this point we assume the user is authed (has correct email)
+	//Expires in 3 hours
+	token, err := apiCfg.createJWT(user.UserID, 3)
+
+	if err != nil {
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error creating JWT: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, JWTResponse{JWT: token})
 }
 
 func (apiCfg *apiConfig) getAllUsers(w http.ResponseWriter, r *http.Request) {

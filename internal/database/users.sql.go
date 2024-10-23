@@ -13,14 +13,13 @@ import (
 )
 
 const createUser = `-- name: CreateUser :one
-INSERT INTO users (user_id, api_key, name, email, password, created_at, updated_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7)
-RETURNING user_id, api_key, name, email, password, created_at, updated_at
+INSERT INTO users (user_id, name, email, password, created_at, updated_at)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING user_id, name, email, password, created_at, updated_at
 `
 
 type CreateUserParams struct {
 	UserID    uuid.UUID
-	ApiKey    string
 	Name      string
 	Email     string
 	Password  string
@@ -31,7 +30,6 @@ type CreateUserParams struct {
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
 	row := q.db.QueryRowContext(ctx, createUser,
 		arg.UserID,
-		arg.ApiKey,
 		arg.Name,
 		arg.Email,
 		arg.Password,
@@ -41,7 +39,6 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 	var i User
 	err := row.Scan(
 		&i.UserID,
-		&i.ApiKey,
 		&i.Name,
 		&i.Email,
 		&i.Password,
@@ -62,7 +59,7 @@ func (q *Queries) DeleteUser(ctx context.Context, userID uuid.UUID) error {
 }
 
 const getAllUsers = `-- name: GetAllUsers :many
-SELECT user_id, api_key, name, email, password, created_at, updated_at FROM users
+SELECT user_id, name, email, password, created_at, updated_at FROM users
 `
 
 func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
@@ -76,7 +73,6 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 		var i User
 		if err := rows.Scan(
 			&i.UserID,
-			&i.ApiKey,
 			&i.Name,
 			&i.Email,
 			&i.Password,
@@ -96,16 +92,35 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const getUserByAPIKey = `-- name: GetUserByAPIKey :one
-SELECT user_id, api_key, name, email, password, created_at, updated_at FROM users WHERE api_key = $1
+const getUserFromEmail = `-- name: GetUserFromEmail :one
+SELECT user_id, name, email, password, created_at, updated_at FROM users
+WHERE email = $1
 `
 
-func (q *Queries) GetUserByAPIKey(ctx context.Context, apiKey string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserByAPIKey, apiKey)
+func (q *Queries) GetUserFromEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserFromEmail, email)
 	var i User
 	err := row.Scan(
 		&i.UserID,
-		&i.ApiKey,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getUserFromID = `-- name: GetUserFromID :one
+SELECT user_id, name, email, password, created_at, updated_at FROM users
+WHERE user_id = $1
+`
+
+func (q *Queries) GetUserFromID(ctx context.Context, userID uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserFromID, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
 		&i.Name,
 		&i.Email,
 		&i.Password,
