@@ -2,12 +2,12 @@
 SELECT * FROM events
 ORDER BY date DESC;
 
--- name: GetUsersEvents :many
+-- name: GetUserMadeEvents :many
 SELECT * FROM events
-WHERE users_id = $1;
+WHERE author_id = $1;
 
 -- name: CreateEvent :one
-INSERT INTO events (event_id, event_name, users_id, date, updated_at, created_at)
+INSERT INTO events (event_id, event_name, author_id, date, updated_at, created_at)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 

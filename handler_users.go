@@ -39,6 +39,7 @@ func (apiCfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		Password:  string(hashed),
 		CreatedAt: time.Now().UTC(),
 		UpdatedAt: time.Now().UTC(),
+		Elevation: "user",
 	})
 
 	if err != nil {

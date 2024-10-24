@@ -32,7 +32,7 @@ type authedHandler func(http.ResponseWriter, *http.Request, database.User)
 type Event struct {
 	EventID   uuid.UUID `json:"event_id"`
 	EventName string    `json:"event_name"`
-	UsersID   uuid.UUID `json:"users_id"`
+	AuthorID  uuid.UUID `json:"users_id"`
 	Date      time.Time `json:"date"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -58,7 +58,7 @@ func DBEventToLocalEvent(event database.Event) Event {
 	return Event{
 		EventID:   event.EventID,
 		EventName: event.EventName,
-		UsersID:   event.UsersID,
+		AuthorID:  event.AuthorID,
 		Date:      event.Date,
 		CreatedAt: event.CreatedAt,
 		UpdatedAt: event.UpdatedAt,

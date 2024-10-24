@@ -6,6 +6,7 @@ RETURNING *;
 -- name: GetUserFromID :one
 SELECT * FROM users
 WHERE user_id = $1;
+
 -- name: GetAllUsers :many
 SELECT * FROM users;
 

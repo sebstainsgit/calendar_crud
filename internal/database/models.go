@@ -13,10 +13,15 @@ import (
 type Event struct {
 	EventID   uuid.UUID
 	EventName string
-	UsersID   uuid.UUID
+	AuthorID  uuid.UUID
 	Date      time.Time
 	CreatedAt time.Time
 	UpdatedAt time.Time
+}
+
+type EventUser struct {
+	EventID uuid.UUID
+	UserID  uuid.UUID
 }
 
 type RefreshToken struct {

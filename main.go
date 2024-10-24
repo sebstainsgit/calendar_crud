@@ -40,9 +40,9 @@ func main() {
 		JWT_SECRET: JWTString,
 	}
 
-	router := chi.NewRouter()
+	r := chi.NewRouter()
 
-	router.Use(cors.Handler(cors.Options{
+	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://*", "http://*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"*"},
@@ -50,22 +50,32 @@ func main() {
 		AllowCredentials: false,
 		MaxAge:           3000,
 	}))
+	
+	apiRouter := chi.NewRouter()
 	//Responds with 200
-	router.Get("/ready", handlerReadiness)
+	apiRouter.Get("/ready", handlerReadiness)
 	//Responds with error
-	router.Get("/error", handlerError)
-
-	router.Post("/login", apiCfg.loginUser)
-
+	apiRouter.Get("/error", handlerError)
+	//Works accross whole API, not specific to elevation
+	apiRouter.Post("/login", apiCfg.loginUser)
+	
+	r.Mount("/api", apiRouter)
+	
 	userRouter := chi.NewRouter()
 
 	userRouter.Get("/events", apiCfg.middlewareUserAuth(apiCfg.getUsersEvents))
 
-	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createEvent))
+	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createSelfEvent))
+
+	userRouter.Post("/group_event", apiCfg.middlewareUserAuth(apiCfg.createGroupEvent))
 
 	userRouter.Get("/refresh", apiCfg.makeJWTfromRefrToken)
 
+	userRouter.Post("/update_event", apiCfg.middlewareUserAuth(apiCfg.updateEvent))
+
 	userRouter.Delete("/delete_event", apiCfg.middlewareUserAuth(apiCfg.deleteEvent))
+
+	userRouter.Delete("/remove_from_event", apiCfg.middlewareUserAuth(apiCfg.removeSelfFromEvent))
 
 	userRouter.Post("/users", apiCfg.createUser)
 
@@ -73,7 +83,7 @@ func main() {
 
 	userRouter.Delete("/delete_self", apiCfg.middlewareUserAuth(apiCfg.deleteUserSelf))
 
-	router.Mount("/user", userRouter)
+	r.Mount("/user", userRouter)
 
 	adminRouter := chi.NewRouter()
 
@@ -85,11 +95,11 @@ func main() {
 
 	adminRouter.Get("/users", apiCfg.middlewareAdminAuth(apiCfg.getAllUsers))
 
-	router.Mount("/admin", adminRouter)
+	r.Mount("/admin", adminRouter)
 
 	srv := &http.Server{
 		Addr:    ":" + portStr,
-		Handler: router,
+		Handler: r,
 	}
 
 	log.Println("Server running on port", portStr)

@@ -29,10 +29,5 @@ func (apiCfg *apiConfig) removeOldRefrTokens(w http.ResponseWriter, r *http.Requ
 
 	resp := response{Tokens_Deleted: tokensDeleted}
 
-	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error marshalling tokens_deleted to JSON: %s", err))
-		return
-	}
-
 	respondWithJSON(w, http.StatusOK, resp)
 }
