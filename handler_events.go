@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -18,19 +16,10 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 	}
 	//Date in format "2018-04-08 15:04:05"
 
-	var parameters params
-
-	data, err := io.ReadAll(r.Body)
+	parameters, err := decodeParams[params](r.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
-		return
-	}
-
-	err = json.Unmarshal(data, &parameters)
-
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
 		return
 	}
 
@@ -58,6 +47,33 @@ func (apiCfg *apiConfig) createEvent(w http.ResponseWriter, r *http.Request, use
 	respondWithJSON(w, http.StatusCreated, DBEventToLocalEvent(event))
 }
 
+func (apiCfg *apiConfig) updateEvent(w http.ResponseWriter, r *http.Request, user database.User) {
+	type params struct {
+		Event_Name string    `json:"event_name"`
+		Date       time.Time `json:"date"`
+	}
+
+	parameters, err := decodeParams[params](r.Body)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
+		return
+	}
+
+	event, err := apiCfg.DB.UpdateEvent(r.Context(), database.UpdateEventParams{
+		Date:      parameters.Date,
+		EventName: parameters.Event_Name,
+		UpdatedAt: time.Now().UTC(),
+	})
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error updating event in DB: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusOK, DBEventToLocalEvent(event))
+}
+
 func (apiCfg *apiConfig) getUsersEvents(w http.ResponseWriter, r *http.Request, user database.User) {
 	events, err := apiCfg.DB.GetUsersEvents(r.Context(), user.UserID)
 
@@ -74,19 +90,10 @@ func (apiCfg *apiConfig) deleteEvent(w http.ResponseWriter, r *http.Request, use
 		EventID string `json:"event_id"`
 	}
 
-	var parameters params
-
-	data, err := io.ReadAll(r.Body)
+	parameters, err := decodeParams[params](r.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
-		return
-	}
-
-	err = json.Unmarshal(data, &parameters)
-
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
 		return
 	}
 

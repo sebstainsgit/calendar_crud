@@ -26,7 +26,7 @@ type TokenResponse struct {
 	RefreshToken string `json:"refresh_token"`
 }
 
-type authedHandler func(w http.ResponseWriter, r *http.Request, user database.User)
+type authedHandler func(http.ResponseWriter, *http.Request, database.User)
 
 // local event
 type Event struct {
@@ -42,14 +42,14 @@ type User struct {
 	UserID    uuid.UUID `json:"user_id"`
 	Name      string    `json:"name"`
 	Email     string    `json:"email"`
-	Password  string    `json"password"`
+	Password  string    `json:"password"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 	Elevation string    `json:"elevation"`
 }
 
 type RefreshToken struct {
-	RefrToken string    `json:"refresh_token`
+	RefrToken string    `json:"refresh_token"`
 	UsersID   uuid.UUID `json:"users_id"`
 	Expires   time.Time `json:"expires"`
 }

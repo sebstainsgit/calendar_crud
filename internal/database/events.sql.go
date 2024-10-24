@@ -13,7 +13,7 @@ import (
 )
 
 const createEvent = `-- name: CreateEvent :one
-INSERT INTO events (event_id, event_name, users_id, date, created_at, updated_at)
+INSERT INTO events (event_id, event_name, users_id, date, updated_at, created_at)
 VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING event_id, event_name, users_id, date, created_at, updated_at
 `
@@ -23,8 +23,8 @@ type CreateEventParams struct {
 	EventName string
 	UsersID   uuid.UUID
 	Date      time.Time
-	CreatedAt time.Time
 	UpdatedAt time.Time
+	CreatedAt time.Time
 }
 
 func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event, error) {
@@ -33,8 +33,8 @@ func (q *Queries) CreateEvent(ctx context.Context, arg CreateEventParams) (Event
 		arg.EventName,
 		arg.UsersID,
 		arg.Date,
-		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.CreatedAt,
 	)
 	var i Event
 	err := row.Scan(
@@ -145,4 +145,37 @@ func (q *Queries) GetUsersEvents(ctx context.Context, usersID uuid.UUID) ([]Even
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateEvent = `-- name: UpdateEvent :one
+UPDATE events
+SET date = $2, event_name = $3, updated_at = $4
+WHERE event_id = $1
+RETURNING event_id, event_name, users_id, date, created_at, updated_at
+`
+
+type UpdateEventParams struct {
+	EventID   uuid.UUID
+	Date      time.Time
+	EventName string
+	UpdatedAt time.Time
+}
+
+func (q *Queries) UpdateEvent(ctx context.Context, arg UpdateEventParams) (Event, error) {
+	row := q.db.QueryRowContext(ctx, updateEvent,
+		arg.EventID,
+		arg.Date,
+		arg.EventName,
+		arg.UpdatedAt,
+	)
+	var i Event
+	err := row.Scan(
+		&i.EventID,
+		&i.EventName,
+		&i.UsersID,
+		&i.Date,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }

@@ -1,9 +1,7 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"time"
 
@@ -20,26 +18,17 @@ func (apiCfg *apiConfig) createUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	var parameters params
-
-	data, err := io.ReadAll(r.Body)
+	parameters, err := decodeParams[params](r.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
-		return
-	}
-
-	err = json.Unmarshal(data, &parameters)
-
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
 		return
 	}
 
 	hashed, err := bcrypt.GenerateFromPassword([]byte(parameters.Password), bcrypt.DefaultCost)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, "error hashing password")
+		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error hashing password: %s", err))
 		return
 	}
 	//Automatically adds Elevation: "user" in sqlc function
@@ -66,19 +55,10 @@ func (apiCfg *apiConfig) loginUser(w http.ResponseWriter, r *http.Request) {
 		Password string `json:"password"`
 	}
 
-	var parameters params
-
-	data, err := io.ReadAll(r.Body)
+	parameters, err := decodeParams[params](r.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
-		return
-	}
-
-	err = json.Unmarshal(data, &parameters)
-
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
 		return
 	}
 
@@ -121,27 +101,18 @@ func (apiCfg *apiConfig) updateUserInfo(w http.ResponseWriter, r *http.Request, 
 		Name     string `json:"name"`
 	}
 
-	var parameters params
-
-	data, err := io.ReadAll(r.Body)
+	parameters, err := decodeParams[params](r.Body)
 
 	if err != nil {
-		respondWithError(w, http.StatusInternalServerError, fmt.Sprintf("error reading request body: %s", err))
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
 		return
 	}
 
-	err = json.Unmarshal(data, &parameters)
-
-	if err != nil {
-		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error unmarhsalling request body: %s", err))
-		return
-	}
-
-	updatedUser, err := apiCfg.DB.UpdateUserInfo(r.Context(), database.UpdateUserInfoParams{
-		UserID:   user.UserID,
-		Name:     parameters.Name,
-		Email:    parameters.Email,
-		Password: parameters.Password,
+	updatedUser, err := apiCfg.DB.UpdateUser(r.Context(), database.UpdateUserParams{
+		UserID:    user.UserID,
+		Name:      parameters.Name,
+		Email:     parameters.Email,
+		Password:  parameters.Password,
 		UpdatedAt: time.Now().UTC(),
 	})
 

@@ -36,7 +36,7 @@ func main() {
 	JWTString := os.Getenv("JWT_SECRET")
 
 	apiCfg := apiConfig{
-		DB: db,
+		DB:         db,
 		JWT_SECRET: JWTString,
 	}
 
@@ -50,11 +50,12 @@ func main() {
 		AllowCredentials: false,
 		MaxAge:           3000,
 	}))
-
 	//Responds with 200
 	router.Get("/ready", handlerReadiness)
 	//Responds with error
 	router.Get("/error", handlerError)
+
+	router.Post("/login", apiCfg.loginUser)
 
 	userRouter := chi.NewRouter()
 
@@ -62,26 +63,30 @@ func main() {
 
 	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createEvent))
 
-	userRouter.Post("/login", apiCfg.loginUser)
-
 	userRouter.Get("/refresh", apiCfg.makeJWTfromRefrToken)
-		
+
 	userRouter.Delete("/delete_event", apiCfg.middlewareUserAuth(apiCfg.deleteEvent))
 
 	userRouter.Post("/users", apiCfg.createUser)
 
-	userRouter.Get("/users", apiCfg.getAllUsers)
-
 	userRouter.Post("/update_self", apiCfg.middlewareUserAuth(apiCfg.updateUserInfo))
 
 	userRouter.Delete("/delete_self", apiCfg.middlewareUserAuth(apiCfg.deleteUserSelf))
-	
+
 	router.Mount("/user", userRouter)
 
 	adminRouter := chi.NewRouter()
 
+	adminRouter.Get("/remove_expired_tokens", apiCfg.middlewareAdminAuth(apiCfg.removeOldRefrTokens))
+
+	adminRouter.Post("/admins", apiCfg.createAdmin)
+
+	adminRouter.Delete("/delete_user", apiCfg.middlewareAdminAuthWithUser(apiCfg.deleteUser))
+
+	adminRouter.Get("/users", apiCfg.middlewareAdminAuth(apiCfg.getAllUsers))
+
 	router.Mount("/admin", adminRouter)
-	
+
 	srv := &http.Server{
 		Addr:    ":" + portStr,
 		Handler: router,

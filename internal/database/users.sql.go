@@ -14,7 +14,7 @@ import (
 
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (user_id, name, email, password, created_at, updated_at, elevation)
-VALUES ($1, $2, $3, $4, $5, $6, 'user')
+VALUES ($1, $2, $3, $4, $5, $6, $7)
 RETURNING user_id, name, email, password, created_at, updated_at, elevation
 `
 
@@ -25,6 +25,7 @@ type CreateUserParams struct {
 	Password  string
 	CreatedAt time.Time
 	UpdatedAt time.Time
+	Elevation string
 }
 
 func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, error) {
@@ -35,6 +36,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		arg.Password,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+		arg.Elevation,
 	)
 	var i User
 	err := row.Scan(
@@ -134,14 +136,14 @@ func (q *Queries) GetUserFromID(ctx context.Context, userID uuid.UUID) (User, er
 	return i, err
 }
 
-const updateUserInfo = `-- name: UpdateUserInfo :one
+const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET name = $2, email = $3, password = $4, updated_at = $5
 WHERE user_id = $1
 RETURNING user_id, name, email, password, created_at, updated_at, elevation
 `
 
-type UpdateUserInfoParams struct {
+type UpdateUserParams struct {
 	UserID    uuid.UUID
 	Name      string
 	Email     string
@@ -149,8 +151,8 @@ type UpdateUserInfoParams struct {
 	UpdatedAt time.Time
 }
 
-func (q *Queries) UpdateUserInfo(ctx context.Context, arg UpdateUserInfoParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserInfo,
+func (q *Queries) UpdateUser(ctx context.Context, arg UpdateUserParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUser,
 		arg.UserID,
 		arg.Name,
 		arg.Email,

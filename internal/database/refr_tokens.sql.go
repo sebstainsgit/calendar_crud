@@ -31,6 +31,43 @@ func (q *Queries) CreateRefrToken(ctx context.Context, arg CreateRefrTokenParams
 	return i, err
 }
 
+const deleteRefrToken = `-- name: DeleteRefrToken :exec
+DELETE FROM refresh_tokens
+WHERE refr_token = $1
+`
+
+func (q *Queries) DeleteRefrToken(ctx context.Context, refrToken string) error {
+	_, err := q.db.ExecContext(ctx, deleteRefrToken, refrToken)
+	return err
+}
+
+const getAllRefrTokens = `-- name: GetAllRefrTokens :many
+SELECT refr_token, users_id, expires FROM refresh_tokens
+`
+
+func (q *Queries) GetAllRefrTokens(ctx context.Context) ([]RefreshToken, error) {
+	rows, err := q.db.QueryContext(ctx, getAllRefrTokens)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []RefreshToken
+	for rows.Next() {
+		var i RefreshToken
+		if err := rows.Scan(&i.RefrToken, &i.UsersID, &i.Expires); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const userIDFromRefrToken = `-- name: UserIDFromRefrToken :one
 SELECT users_id FROM refresh_tokens
 WHERE refr_token = $1

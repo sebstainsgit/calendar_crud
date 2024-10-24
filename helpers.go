@@ -3,7 +3,9 @@ package main
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -35,4 +37,22 @@ func getBearerHeader(headers http.Header) (string, error) {
 	}
 
 	return vals[1], nil
+}
+
+func decodeParams[T any](body io.ReadCloser) (T, error) {
+	var parameters T
+
+	data, err := io.ReadAll(body)
+
+	if err != nil {
+		return *new(T), err
+	}
+
+	err = json.Unmarshal(data, &parameters)
+
+	if err != nil {
+		return *new(T), err
+	}
+
+	return parameters, nil
 }
