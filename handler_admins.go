@@ -71,3 +71,25 @@ func (apiCfg *apiConfig) deleteUser(w http.ResponseWriter, r *http.Request, admi
 
 	respondWithJSON(w, http.StatusNoContent, "")
 }
+
+func (apiCfg *apiConfig) promoteToAdmin(w http.ResponseWriter, r *http.Request, admin database.User) {
+	type params struct {
+		UserID uuid.UUID `json:"user_id"`
+	}
+
+	parameters, err := decodeParams[params](r.Body)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error decoding request body: %s", err))
+		return
+	}
+
+	newAdmin, err := apiCfg.DB.PromoteUser(r.Context(), parameters.UserID)
+
+	if err != nil {
+		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error promoting user in DB: %s", err))
+		return
+	}
+
+	respondWithJSON(w, http.StatusCreated, DBUserToLocalUser(newAdmin))
+}

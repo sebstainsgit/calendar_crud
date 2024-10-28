@@ -23,3 +23,9 @@ UPDATE users
 SET name = $2, email = $3, password = $4, updated_at = $5
 WHERE user_id = $1
 RETURNING *;
+
+-- name: PromoteUser :one
+UPDATE users
+SET elevation = 'admin'
+WHERE user_id = $1
+RETURNING *;

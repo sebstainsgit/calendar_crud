@@ -136,6 +136,28 @@ func (q *Queries) GetUserFromID(ctx context.Context, userID uuid.UUID) (User, er
 	return i, err
 }
 
+const promoteUser = `-- name: PromoteUser :one
+UPDATE users
+SET elevation = 'admin'
+WHERE user_id = $1
+RETURNING user_id, name, email, password, created_at, updated_at, elevation
+`
+
+func (q *Queries) PromoteUser(ctx context.Context, userID uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, promoteUser, userID)
+	var i User
+	err := row.Scan(
+		&i.UserID,
+		&i.Name,
+		&i.Email,
+		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Elevation,
+	)
+	return i, err
+}
+
 const updateUser = `-- name: UpdateUser :one
 UPDATE users
 SET name = $2, email = $3, password = $4, updated_at = $5

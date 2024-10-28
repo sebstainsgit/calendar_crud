@@ -23,7 +23,7 @@ func (apiCfg *apiConfig) createSelfEvent(w http.ResponseWriter, r *http.Request,
 		return
 	}
 
-	dueTime, err := time.Parse(time.DateTime, parameters.Date)
+	dueTime, err := time.Parse(time.RFC1123Z, parameters.Date)
 
 	if err != nil {
 		respondWithError(w, http.StatusBadRequest, fmt.Sprintf("error parsing time into correct format: %s", err))
@@ -134,7 +134,7 @@ func (apiCfg *apiConfig) updateEvent(w http.ResponseWriter, r *http.Request, use
 }
 
 func (apiCfg *apiConfig) getUsersEvents(w http.ResponseWriter, r *http.Request, user database.User) {
-	eventIDArr, err := apiCfg.DB.GetEventsForUser(r.Context(), user.UserID)
+	eventIDArr, err := apiCfg.DB.GetEventsIDsForUser(r.Context(), user.UserID)
 
 	events := []Event{}
 

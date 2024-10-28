@@ -44,14 +44,14 @@ func (q *Queries) DeleteUserFromEvent(ctx context.Context, arg DeleteUserFromEve
 	return err
 }
 
-const getEventsForUser = `-- name: GetEventsForUser :many
+const getEventsIDsForUser = `-- name: GetEventsIDsForUser :many
 SELECT event_id
 FROM event_users 
 WHERE user_id = $1
 `
 
-func (q *Queries) GetEventsForUser(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, getEventsForUser, userID)
+func (q *Queries) GetEventsIDsForUser(ctx context.Context, userID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getEventsIDsForUser, userID)
 	if err != nil {
 		return nil, err
 	}

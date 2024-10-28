@@ -9,7 +9,7 @@ FROM event_users eu
 JOIN users u ON eu.user_id = u.user_id
 WHERE eu.event_id = $1;
 
--- name: GetEventsForUser :many
+-- name: GetEventsIDsForUser :many
 SELECT event_id
 FROM event_users 
 WHERE user_id = $1;

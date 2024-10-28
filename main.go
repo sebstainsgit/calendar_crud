@@ -95,6 +95,8 @@ func main() {
 
 	adminRouter.Get("/users", apiCfg.middlewareAdminAuth(apiCfg.getAllUsers))
 
+	adminRouter.Post("/promote", apiCfg.middlewareAdminAuthWithUser(apiCfg.promoteToAdmin))
+
 	r.Mount("/admin", adminRouter)
 
 	srv := &http.Server{
