@@ -14,7 +14,7 @@ This is a **Calendar API** built using **Go**, **PostgreSQL**, and the **Chi rou
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/sebstainsgit/calendar.git
+git clone https://github.com/sebstainsgit/calendar_crud.git
 
 cd calendar
 ```
