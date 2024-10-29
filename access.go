@@ -50,7 +50,7 @@ func (apiCfg *apiConfig) verifyJWT(strToken string, ctx context.Context) (databa
 		return database.User{}, err
 	}
 
-	user, err := apiCfg.DB.GetUserFromID(ctx, userID)
+	user, err := apiCfg.DB.GetUserByID(ctx, userID)
 
 	if err != nil {
 		return database.User{}, err

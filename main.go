@@ -67,7 +67,11 @@ func main() {
 
 	userRouter.Post("/events", apiCfg.middlewareUserAuth(apiCfg.createSelfEvent))
 
+	userRouter.Post("/users_for_event", apiCfg.middlewareUserAuth(apiCfg.getUsersForEvent))
+
 	userRouter.Post("/group_event", apiCfg.middlewareUserAuth(apiCfg.createGroupEvent))
+
+	userRouter.Post("/add_to_event", apiCfg.middlewareUserAuth(apiCfg.addUsersToEvent))
 
 	userRouter.Get("/refresh", apiCfg.makeJWTfromRefrToken)
 
@@ -75,7 +79,11 @@ func main() {
 
 	userRouter.Delete("/delete_event", apiCfg.middlewareUserAuth(apiCfg.deleteEvent))
 
-	userRouter.Delete("/remove_from_event", apiCfg.middlewareUserAuth(apiCfg.removeSelfFromEvent))
+	userRouter.Delete("/remove_self_from_event", apiCfg.middlewareUserAuth(apiCfg.removeSelfFromEvent))
+
+	userRouter.Delete("/remove_users_from_event", apiCfg.middlewareUserAuth(apiCfg.removeUsersFromEvent))
+
+	userRouter.Post("/get_single_event", apiCfg.middlewareUserAuth(apiCfg.getSingleEvent))
 
 	userRouter.Post("/users", apiCfg.createUser)
 

@@ -15,6 +15,10 @@ RETURNING *;
 SELECT * FROM events
 WHERE event_id = $1;
 
+-- name: GetEventByName :one
+SELECT * FROM events
+WHERE event_name = $1;
+
 -- name: DeleteEvent :exec
 DELETE FROM events
 WHERE event_id = $1;

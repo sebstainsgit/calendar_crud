@@ -44,6 +44,23 @@ func (q *Queries) DeleteUserFromEvent(ctx context.Context, arg DeleteUserFromEve
 	return err
 }
 
+const getEventConcerns = `-- name: GetEventConcerns :one
+SELECT event_id, user_id FROM event_users
+WHERE event_id = $1 AND user_id = $2
+`
+
+type GetEventConcernsParams struct {
+	EventID uuid.UUID
+	UserID  uuid.UUID
+}
+
+func (q *Queries) GetEventConcerns(ctx context.Context, arg GetEventConcernsParams) (EventUser, error) {
+	row := q.db.QueryRowContext(ctx, getEventConcerns, arg.EventID, arg.UserID)
+	var i EventUser
+	err := row.Scan(&i.EventID, &i.UserID)
+	return i, err
+}
+
 const getEventsIDsForUser = `-- name: GetEventsIDsForUser :many
 SELECT event_id
 FROM event_users 
@@ -73,15 +90,15 @@ func (q *Queries) GetEventsIDsForUser(ctx context.Context, userID uuid.UUID) ([]
 	return items, nil
 }
 
-const getUsersForEvent = `-- name: GetUsersForEvent :many
+const getUserIDsForEvent = `-- name: GetUserIDsForEvent :many
 SELECT u.user_id
 FROM event_users eu
 JOIN users u ON eu.user_id = u.user_id
 WHERE eu.event_id = $1
 `
 
-func (q *Queries) GetUsersForEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
-	rows, err := q.db.QueryContext(ctx, getUsersForEvent, eventID)
+func (q *Queries) GetUserIDsForEvent(ctx context.Context, eventID uuid.UUID) ([]uuid.UUID, error) {
+	rows, err := q.db.QueryContext(ctx, getUserIDsForEvent, eventID)
 	if err != nil {
 		return nil, err
 	}

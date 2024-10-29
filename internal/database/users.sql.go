@@ -96,13 +96,13 @@ func (q *Queries) GetAllUsers(ctx context.Context) ([]User, error) {
 	return items, nil
 }
 
-const getUserFromEmail = `-- name: GetUserFromEmail :one
+const getUserByID = `-- name: GetUserByID :one
 SELECT user_id, name, email, password, created_at, updated_at, elevation FROM users
-WHERE email = $1
+WHERE user_id = $1
 `
 
-func (q *Queries) GetUserFromEmail(ctx context.Context, email string) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserFromEmail, email)
+func (q *Queries) GetUserByID(ctx context.Context, userID uuid.UUID) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, userID)
 	var i User
 	err := row.Scan(
 		&i.UserID,
@@ -116,13 +116,13 @@ func (q *Queries) GetUserFromEmail(ctx context.Context, email string) (User, err
 	return i, err
 }
 
-const getUserFromID = `-- name: GetUserFromID :one
+const getUserFromEmail = `-- name: GetUserFromEmail :one
 SELECT user_id, name, email, password, created_at, updated_at, elevation FROM users
-WHERE user_id = $1
+WHERE email = $1
 `
 
-func (q *Queries) GetUserFromID(ctx context.Context, userID uuid.UUID) (User, error) {
-	row := q.db.QueryRowContext(ctx, getUserFromID, userID)
+func (q *Queries) GetUserFromEmail(ctx context.Context, email string) (User, error) {
+	row := q.db.QueryRowContext(ctx, getUserFromEmail, email)
 	var i User
 	err := row.Scan(
 		&i.UserID,

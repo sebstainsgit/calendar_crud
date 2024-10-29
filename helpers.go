@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -8,6 +9,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 func makeVarChar() (string, error) {
@@ -55,4 +58,29 @@ func decodeParams[T any](body io.ReadCloser) (T, error) {
 	}
 
 	return parameters, nil
+}
+
+func contains[T string | int | uuid.UUID](target T, arr []T) bool {
+	for _, v := range arr {
+		if target == v {
+			return true
+		}
+	}
+	return false
+}
+
+func (apiCfg *apiConfig) resGetUsersFromArr(ctx context.Context, concerns []uuid.UUID) ([]User, error) {
+	users := []User{}
+
+	for _, userID := range concerns {
+		user, err := apiCfg.DB.GetUserByID(ctx, userID)
+
+		if err != nil {
+			return []User{}, err
+		}
+
+		users = append(users, DBUserToLocalUser(user))
+	}
+
+	return users, nil
 }
